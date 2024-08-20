@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Rentorq</title>
+  <link rel="stylesheet" href="/admin_dashboard.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <style>
+    .car-list {
+      max-height: 200px;
+      overflow-y: hidden;
+      transition: max-height 0.3s ease;
+    }
+    .car-list.show {
+      max-height: 400px;
+      overflow-y: scroll;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Welcome, Admin</h1>
+    <button id="logout-button" class="btn">Logout</button>
+  </header>
+  <main>
+    <section>
+      <h2>Add Car</h2>
+      <form action="/add-car" method="POST" class="car-form">
+        <input type="text" name="make" placeholder="Make" required>
+        <input type="text" name="model" placeholder="Model" required>
+        <input type="number" name="year" placeholder="Year" required>
+        <input type="text" name="licenseNumber" placeholder="License Number" required>
+        <input type="number" name="rentRate" placeholder="Rent Rate" required>
+        <input type="text" name="location" placeholder="Location" required>
+        <input type="text" name="customerId" placeholder="Customer ID">
+        <select name="status" required>
+          <option value="Available">Available</option>
+          <option value="Booked">Booked</option>
+        </select>
+        <input type="date" name="startDate" placeholder="Start Date">
+        <input type="date" name="endDate" placeholder="End Date">
+        <button type="submit" class="btn">Add Car</button>
+      </form>
+    </section>
+    <section>
+      <h2>Delete Car</h2>
+      <form action="/delete-car" method="POST" class="car-form">
+        <input type="text" name="licenseNumber" placeholder="License Number" required>
+        <button type="submit" class="btn">Delete Car</button>
+      </form>
+    </section>
+    <section>
+      <h2>Update Car</h2>
+      <form action="/update-car" method="POST" class="car-form">
+        <input type="text" name="licenseNumber" placeholder="License Number" required>
+        <input type="number" name="rentRate" placeholder="Rent Rate">
+        <input type="text" name="location" placeholder="Location">
+        <select name="status" id="status" required>
+          <option value="Available">Available</option>
+          <option value="Booked">Booked</option>
+        </select>
+        <div id="date-fields" class="hidden">
+          <input type="date" name="startDate" placeholder="Start Date">
+          <input type="date" name="endDate" placeholder="End Date">
+        </div>
+        <button type="submit" class="btn">Update Car</button>
+      </form>
+    </section>
+    <section>
+      <h2>Search Cars</h2>
+      <form id="search-form" action="/search-cars" method="GET" class="car-form">
+        <input type="text" name="query" placeholder="Search by Make, Model, Year, License Number, or Status" required>
+        <button type="submit" class="btn">Search</button>
+      </form>
+      <ul id="search-results">
+          <!-- Search results will be dynamically added here -->
+      </ul>
+    </section>
+    <section class="car-list-container">
+      <h2>Existing Cars</h2>
+      <button id="toggleCars" class="btn">Show All Cars</button>
+      <div class="car-list" id="existingCars">
+        <table>
+          <thead>
+            <tr>
+              <th>Make</th>
+              <th>Model</th>
+              <th>Year</th>
+              <th>License Number</th>
+              <th>Rent Rate</th>
+              <th>Location</th>
+              <th>Customer ID</th>
+              <th>Status</th>
+              <th>Start Date</th>
+              <th>End Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% cars.forEach(car => { %>
+              <tr>
+                <td><%= car.make %></td>
+                <td><%= car.model %></td>
+                <td><%= car.year %></td>
+                <td><%= car.licenseNumber %></td>
+                <td><%= car.rentRate %></td>
+                <td><%= car.location %></td>
+                <td><%= car.customerId %></td>
+                <td><%= car.status %></td>
+                <td><%= car.startDate ? car.startDate.toISOString().split('T')[0] : '' %></td>
+                <td><%= car.endDate ? car.endDate.toISOString().split('T')[0] : '' %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+  <script src="../public/admin_dashboard_script.js"></script>
+  <script>
+    $(document).ready(function() {
+      // Toggle the display of the car list with scrolling functionality
+      $('#toggleCars').on('click', function() {
+        var carList = $('#existingCars');
+        if (carList.hasClass('show')) {
+          carList.removeClass('show');
+          $(this).text('Show All Cars');
+        } else {
+          carList.addClass('show');
+          $(this).text('Hide Cars');
+        }
+      });
+
+      // Handle Search Car
+      $('#search-form').on('submit', function(event) {
+        event.preventDefault();
+        const form = $(this);
+        $.ajax({
+          type: 'GET',
+          url: form.attr('action'),
+          data: form.serialize(),
+          success: function(cars) {
+            const searchResults = $('#search-results');
+            searchResults.empty();
+            if (cars.length > 0) {
+              cars.forEach(car => {
+                searchResults.append(`
+                  <li>
+                    ${car.make} ${car.model} (${car.year}) - License: ${car.licenseNumber}
+                    <br> Rent Rate: ${car.rentRate} 
+                    <br> Location: ${car.location}
+                    <br> Customer ID: ${car.customerId}
+                    <br> Status: ${car.status}
+                    <br> Start Date: ${car.startDate ? new Date(car.startDate).toLocaleDateString() : ''}
+                    <br> End Date: ${car.endDate ? new Date(car.endDate).toLocaleDateString() : ''}
+                  </li>
+                `);
+              });
+            } else {
+              searchResults.append('<li>No records found</li>');
+            }
+          },
+          error: function() {
+            alert('Error searching for cars');
+          }
+        });
+      });
+
+      // Logout button functionality
+      $('#logout-button').on('click', function() {
+        window.location.href = '/';
+      });
+
+      // Show/Hide date fields based on status selection
+      $('#status').on('change', function() {
+        if ($(this).val() === 'Booked') {
+          $('#date-fields').removeClass('hidden');
+        } else {
+          $('#date-fields').addClass('hidden');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

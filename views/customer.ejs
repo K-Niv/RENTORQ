@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Choose your Wheels!</title>
+  <link rel="stylesheet" href="/customer.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <form action="/logout" method="POST" class="logout-form">
+        <button type="submit">Logout</button>
+      </form>
+    </div>
+    <h1>Choose your Wheels!</h1>
+    <button onclick="window.location.href='/my-rides-page'">My Rides</button>
+    <form action="/customer-search-cars" method="GET" class="search-form">
+      <input type="text" name="query" placeholder="Search cars...">
+      <input type="text" name="rentRate" placeholder="Rent Rate (e.g., $50)">
+      <button type="submit">Search</button>
+    </form>
+    
+    <table class="car-table">
+      <thead>
+        <tr>
+          <th>Make</th>
+          <th>Model</th>
+          <th>Year</th>
+          <th>License Number</th>
+          <th>Rent Rate</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% cars.forEach(car => { %>
+          <tr>
+            <td><%= car.make %></td>
+            <td><%= car.model %></td>
+            <td><%= car.year %></td>
+            <td><%= car.licenseNumber %></td>
+            <td>$<%= car.rentRate %>/day</td>
+            <td>
+              <form action="/book-car" method="POST" class="book-form">
+                <input type="hidden" name="carId" value="<%= car._id %>">
+                <input type="text" name="name" placeholder="Name" required>
+                <input type="text" name="contactNumber" placeholder="Contact Number" required>
+                <input type="date" name="startDate" required>
+                <input type="date" name="endDate" required>
+                <button type="submit">Book</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <div id="my-rides-modal" style="display: none;">
+    <h2>My Rides</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Car Model</th>
+          <th>Start Date</th>
+          <th>End Date</th>
+          <th>Duration</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="my-rides-list">
+        
+      </tbody>
+    </table>
+  </div>
+  <% if (bookingSuccess) { %>
+    <div class="success-message" id="success-message">Booking confirmed!</div>
+  <% } %>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const successMessage = document.getElementById('success-message');
+      if (successMessage) {
+        successMessage.style.display = 'block';
+        setTimeout(() => {
+          successMessage.style.display = 'none';
+        }, 3000);
+      }
+    });
+
+    document.getElementById('my-rides-button').addEventListener('click', async function() {
+    const response = await fetch('/my-rides');
+    const rides = await response.json();
+    const ridesList = document.getElementById('my-rides-list');
+    ridesList.innerHTML = '';
+    rides.forEach(ride => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${ride.model}</td>
+        <td>${new Date(ride.startDate).toLocaleDateString()}</td>
+        <td>${new Date(ride.endDate).toLocaleDateString()}</td>
+        <td>${ride.duration} days</td>
+        <td><button onclick="cancelRide('${ride._id}')">Cancel</button></td>
+      `;
+      ridesList.appendChild(row);
+    });
+    document.getElementById('my-rides-modal').style.display = 'block';
+  });
+
+  async function cancelRide(rideId) {
+    const response = await fetch('/cancel-ride', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ rideId })
+    });
+    if (response.ok) {
+      alert('Ride cancelled successfully');
+      document.getElementById('my-rides-button').click(); 
+    } else {
+      alert('Error cancelling ride');
+    }
+  }
+  </script>
+</body>
+</html>

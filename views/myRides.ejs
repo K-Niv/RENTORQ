@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Rides</title>
+  <link rel="stylesheet" href="/myRides.css"> 
+</head>
+<body>
+  <div class="container">
+    <h2>My Rides</h2>
+    <table class="ride-table"> 
+      <thead>
+        <tr>
+          <th>Car Model</th>
+          <th>License Number</th>
+          <th>Start Date</th>
+          <th>End Date</th>
+          <th>Duration</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="my-rides-list">
+        
+      </tbody>
+    </table>
+    <button id="clear-button">Clear</button> 
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', async function() {
+      const response = await fetch('/my-rides');
+      const rides = await response.json();
+      const ridesList = document.getElementById('my-rides-list');
+      ridesList.innerHTML = '';
+      rides.forEach(ride => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${ride.model}</td>
+          <td>${ride.licenseNumber}</td>
+          <td>${new Date(ride.startDate).toLocaleDateString()}</td>
+          <td>${new Date(ride.endDate).toLocaleDateString()}</td>
+          <td>${ride.duration} days</td>
+          <td><button data-license-number="${ride.licenseNumber}" onclick="cancelRide(this)">Cancel</button></td>
+        `;
+        ridesList.appendChild(row);
+      });
+    });
+
+    async function cancelRide(button) {
+      const licenseNumber = button.getAttribute('data-license-number');
+      console.log('Cancelling ride with license number:', licenseNumber); 
+      const response = await fetch('/cancel-ride', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ licenseNumber })
+      });
+      if (response.ok) {
+        alert('Ride cancelled successfully');
+        location.reload(); 
+      } else {
+        alert('Error cancelling ride');
+      }
+    }
+
+    document.getElementById('clear-button').addEventListener('click', function() {
+      document.getElementById('my-rides-list').innerHTML = ''; 
+    });
+  </script>
+</body>
+</html>

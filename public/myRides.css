@@ -1,0 +1,20 @@
+.ride-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+  
+  .ride-table th, .ride-table td {
+    padding: 12px;
+    border: 1px solid #ddd;
+    text-align: left;
+  }
+  
+  .ride-table th {
+    background-color: #007bff;
+    color: #fff;
+  }
+  
+  .ride-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }

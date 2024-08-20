@@ -1,0 +1,29 @@
+<!-- views/signup.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up - Rentorq</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <video id="background-video" autoplay muted></video>
+  <header>
+    <h1>Sign Up</h1>
+  </header>
+  <main>
+    <form action="/signup" method="POST" class="auth-form">
+      <input type="text" name="username" placeholder="Username" required>
+      <input type="email" name="email" placeholder="Email" required>
+      <input type="password" name="password" placeholder="Password" required>
+      <select name="role" required>
+        <option value="customer">Customer</option>
+        <option value="admin">Admin</option>
+      </select>
+      <button type="submit" class="btn">Sign Up</button>
+    </form>
+  </main>
+  <script src="/scripts.js"></script>
+</body>
+</html>
